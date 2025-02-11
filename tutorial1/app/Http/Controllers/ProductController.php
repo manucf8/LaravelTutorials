@@ -4,14 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class ProductController extends Controller
 {
     public static $products = [
-        ["id"=>"1", "name"=>"TV", "description"=>"Best TV"],
-        ["id"=>"2", "name"=>"iPhone", "description"=>"Best iPhone"],
-        ["id"=>"3", "name"=>"Chromecast", "description"=>"Best Chromecast"],
-        ["id"=>"4", "name"=>"Glasses", "description"=>"Best Glasses"]
+        ["id"=>"1", "name"=>"TV", "description"=>"Best TV", "price"=> 1000],
+        ["id"=>"2", "name"=>"iPhone", "description"=>"Best iPhone", "price"=> 800],
+        ["id"=>"3", "name"=>"Chromecast", "description"=>"Best Chromecast", "price"=> 100],
+        ["id"=>"4", "name"=>"Glasses", "description"=>"Best Glasses", "price"=>80]
     ];
     public function index(): View
     {
@@ -22,22 +23,34 @@ class ProductController extends Controller
         return view('product.index')->with("viewData", $viewData);
     }
 
-    public function show(string $id) : View
+    public function show(string $id) : View | RedirectResponse
     {
+        $filteredProducts = array_filter(ProductController::$products, function($product) use ($id) {
+            return $product["id"] == $id;
+        });
+    
+        if (empty($filteredProducts)) {
+            return redirect()->route("home.index");
+        }
+    
+        $product = array_values($filteredProducts)[0]; 
+
         $viewData = [];
-        $product = ProductController::$products[$id-1];
         $viewData["title"] = $product["name"]." - Online Store";
         $viewData["subtitle"] =  $product["name"]." - Product information";
         $viewData["product"] = $product;
         return view('product.show')->with("viewData", $viewData);
     }
-    public function create(): View
+    public function create(Request $request): View
     {
         $viewData = []; //to be sent to the view
         $viewData["title"] = "Create product";
+        
 
         return view('product.create')->with("viewData",$viewData);
     }
+
+
 
     public function save(Request $request)
     {
